@@ -1,0 +1,81 @@
+//This program measures the RPM of a motor
+//using an optical sensor and a slotted disk
+//Data is stored into an array and sent out on the serial
+//after data is done being collected.  This prevents the serial
+//from disrupting the interrupts and it only takes data points
+//when there is a new interrupt (non constant time interval)  
+
+const int numpts=1550;
+//long rpm;
+long oldtime=0;
+long DeltaT;
+int AmpsArray[numpts];
+int VoltArray[numpts];
+int RPMArray[numpts];
+int i=0; 
+int j=0;
+
+//-------------------------------------
+
+void setup() 
+{  
+  Serial.begin(115200);
+  attachInterrupt(digitalPinToInterrupt(2),isr,RISING);
+  for(i=0; i<=numpts; i++)
+    {
+      RPMArray[i]=0;
+      VoltArray[i]=0;
+      AmpsArray[i]=0;
+    }
+  i=0;
+}
+
+//-------------------------------------
+void loop() 
+{ 
+    if(i>numpts-1)
+      {
+        for(j=0; j<numpts; j++)
+          {
+          
+          Serial.print(RPMArray[j]);  //Print DeltaT
+          Serial.print(", ");
+          //Serial.print(60000000/RPMArray[j]); //Print RPM  1 hole in disk
+          //Serial.print(15000000/RPMArray[j]); //Print RPM  4 holes in disk
+          //Serial.print(", ");
+          Serial.print(((AmpsArray[j]-512)/4.61)-8); //Print Current
+         
+          Serial.print(", ");
+          Serial.println(VoltArray[j]/108.1); //Print Voltage
+          
+//          Serial.print(", ");
+//          Serial.print(j);
+//          Serial.print(", ");
+//          Serial.println(i);
+
+          if(j>numpts-4)
+            {
+              i=0;
+            }
+          delay(10);
+          }
+      }
+}
+
+//------------------------------------------
+void isr() //interrupt service routine
+{
+   if(i<numpts & j<1)
+    { 
+       DeltaT=micros()-oldtime;        //finds the change in time 
+       RPMArray[i]=DeltaT;
+       oldtime=micros();             //saves the current time
+             
+       AmpsArray[i]=analogRead(A1);   //Read in Current
+       VoltArray[i]=analogRead(A0);   //Read in Voltage    
+       i++;
+    } 
+   
+
+}
+//------------------------------------------
