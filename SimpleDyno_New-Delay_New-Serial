@@ -1,0 +1,69 @@
+const int NumPortsToRead = 6;
+int AnalogResult[NumPortsToRead];
+volatile unsigned long TimeStamp = 0;
+volatile unsigned long time1 = 0;
+volatile unsigned long time2 = 0;
+volatile unsigned long Oldtime1 = 0;
+volatile unsigned long Oldtime2 = 0;
+volatile unsigned long TempTime1 = 0;
+volatile unsigned long TempTime2 = 0;
+String AllResult = "";
+
+#define UPDATE_INTERVAL 15 // Number of milliseconds between each update
+unsigned long lastUpdateTime;
+
+void setup() 
+{
+  // Initialize serial communication
+  // Ensure that Baud rate specified here matches that selected in SimpleDyno
+  // Availailable Baud rates are:
+  // 9600, 14400, 19200, 28800, 38400, 57600, 115200
+  Serial.begin(115200);
+  // Initialize interupts (Pin2 is interrupt 0 = RPM1, Pin3 in interrupt 1 = RPM2)
+  attachInterrupt(0,channel1,FALLING);
+  // attachInterrupt(1,channel2,FALLING);
+
+  lastUpdateTime = millis();
+}
+
+void loop() 
+{
+  unsigned long currentTime = millis();
+  if((currentTime - lastUpdateTime) > UPDATE_INTERVAL)
+    {
+      lastUpdateTime = currentTime;
+
+      Serial.print("");
+      Serial.print(micros());
+      Serial.print(",");
+      Serial.print(TempTime1);
+      Serial.print(",");
+      Serial.print(time1);
+      Serial.print(",");
+      Serial.print(TempTime2);
+      Serial.print(",");
+      Serial.print(time2);
+      Serial.print(",");
+      Serial.print(analogRead(0));
+      Serial.print(",");
+      Serial.print(analogRead(1));
+      Serial.print(",");
+      Serial.print(analogRead(2));
+      Serial.print(",");
+      Serial.print(analogRead(3));
+      Serial.print(",");
+      Serial.print(analogRead(4));
+      Serial.print(",");
+      Serial.println(analogRead(5));
+      
+    }
+}
+
+//////////////////////////////////////////////////////////////
+//Interrupt routine for RPM1
+void channel1()
+  {
+    TempTime1 = micros();
+    time1 = TempTime1-Oldtime1;
+    Oldtime1 = TempTime1;
+  }
